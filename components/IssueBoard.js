@@ -3,12 +3,16 @@
 import { useEffect, useState } from "react";
 import axios from "../utils/api";
 import NewIssueForm from "./NewIssueForm"; // ✅ 確保 NewIssueForm 正確引入
+import CommentSection from "./CommentSection"; // 添加評論組件
+import QuickEditForm from "./QuickEditForm"; // 添加快速編輯組件
 import React from "react";
 
 export default function IssueBoard() {
   const [issues, setIssues] = useState([]);
   const [expandedIssueId, setExpandedIssueId] = useState(null);
   const [isAdding, setIsAdding] = useState(false); // 控制「新增 Issue」表單開關
+  const [activeTab, setActiveTab] = useState("details"); // 添加 tab 狀態: details 或 comments
+  const [editingIssueId, setEditingIssueId] = useState(null); // 添加編輯狀態
 
   useEffect(() => {
     fetchIssues();
@@ -18,7 +22,7 @@ export default function IssueBoard() {
   const fetchIssues = async () => {
     try {
       const res = await axios.get("/issues");
-      setIssues(res.data);
+      setIssues(res.data.issues || []);
     } catch (error) {
       console.error("載入 Issue 失敗", error);
     }
@@ -58,6 +62,11 @@ export default function IssueBoard() {
       if (res.status === 200) {
         // 從前端 state 移除那筆被刪的 Issue
         setIssues((prev) => prev.filter((issue) => issue.id !== id));
+        
+        // 如果刪除的正是展開的那個，重置展開狀態
+        if (expandedIssueId === id) {
+          setExpandedIssueId(null);
+        }
       }
     } catch (error) {
       console.error("刪除 Issue 失敗", error);
@@ -65,8 +74,26 @@ export default function IssueBoard() {
     }
   };
 
+  // 處理快速編輯的儲存
+  const handleQuickEditSave = (updatedIssue) => {
+    // 更新本地狀態
+    setIssues(prev => 
+      prev.map(issue => 
+        issue.id === updatedIssue.id ? updatedIssue : issue
+      )
+    );
+    
+    // 關閉編輯模式
+    setEditingIssueId(null);
+  };
+
   const statuses = ["Pending", "In Progress", "Closed"];
 
+  // 處理展開邏輯
+  const handleExpand = (issueId) => {
+    setExpandedIssueId(expandedIssueId === issueId ? null : issueId);
+    setActiveTab("details"); // 預設顯示詳情標籤
+  };
 
   return (
     <div className="container mt-4">
@@ -102,7 +129,7 @@ export default function IssueBoard() {
                 <th>問題類型</th>
                 <th>狀態</th>
                 <th>建立日期</th>
-                <th>操作</th>
+                <th style={{minWidth: '200px'}}>操作</th>
               </tr>
             </thead>
             <tbody>
@@ -140,35 +167,88 @@ export default function IssueBoard() {
                           : "無效日期"}
                       </td>
                       <td>
-                        <button
-                          className="btn btn-primary btn-sm"
-                          onClick={() =>
-                            setExpandedIssueId(
-                              expandedIssueId === issue.id ? null : issue.id
-                            )
-                          }
-                        >
-                          {expandedIssueId === issue.id ? "收起" : "編輯"}
-                        </button>
-                        {/* ★ 新增：刪除按鈕 */}
-                        <button
-                          className="btn btn-danger btn-sm"
-                          onClick={() => {
-                            if (window.confirm("確定要刪除這個 Issue 嗎？")) {
-                              deleteIssue(issue.id);
-                            }
-                          }}
-                        >
-                          刪除
-                        </button>
+                        <div className="d-flex flex-wrap">
+                          <button
+                            className="btn btn-primary btn-sm me-1 mb-1"
+                            onClick={() => handleExpand(issue.id)}
+                          >
+                            {expandedIssueId === issue.id ? "收起" : "展開"}
+                          </button>
+                          
+                          {/* 新增：快速編輯按鈕 */}
+                          <button
+                            className="btn btn-info btn-sm me-1 mb-1"
+                            onClick={() => setEditingIssueId(issue.id)}
+                          >
+                            編輯
+                          </button>
+                          
+                          <button
+                            className="btn btn-danger btn-sm mb-1"
+                            onClick={() => {
+                              if (window.confirm("確定要刪除這個 Issue 嗎？")) {
+                                deleteIssue(issue.id);
+                              }
+                            }}
+                          >
+                            刪除
+                          </button>
+                        </div>
                       </td>
                     </tr>
+                    
+                    {/* 快速編輯表單 */}
+                    {editingIssueId === issue.id && (
+                      <tr>
+                        <td colSpan="6">
+                          <QuickEditForm 
+                            issue={issue} 
+                            onUpdate={handleQuickEditSave}
+                            onCancel={() => setEditingIssueId(null)}
+                          />
+                        </td>
+                      </tr>
+                    )}
+                    
+                    {/* 展開的詳情或評論 */}
                     {expandedIssueId === issue.id && (
                       <tr>
                         <td colSpan="6">
                           <div className="p-3 bg-light">
-                            <h6>問題描述：</h6>
-                            <p>{issue.description || "無詳細描述"}</p>
+                            {/* 添加標籤頁切換 */}
+                            <ul className="nav nav-tabs mb-3">
+                              <li className="nav-item">
+                                <button 
+                                  className={`nav-link ${activeTab === 'details' ? 'active' : ''}`}
+                                  onClick={() => setActiveTab('details')}
+                                >
+                                  📋 問題詳情
+                                </button>
+                              </li>
+                              <li className="nav-item">
+                                <button 
+                                  className={`nav-link ${activeTab === 'comments' ? 'active' : ''}`}
+                                  onClick={() => setActiveTab('comments')}
+                                >
+                                  💬 處理記錄
+                                </button>
+                              </li>
+                            </ul>
+                            
+                            {/* 詳情內容 */}
+                            {activeTab === 'details' && (
+                              <div>
+                                <h6>問題描述：</h6>
+                                <p className="p-2 bg-white rounded border">
+                                  {issue.description || "無詳細描述"}
+                                </p>
+                              </div>
+                            )}
+                            
+                            {/* 評論區域 */}
+                            {activeTab === 'comments' && (
+                              <CommentSection issueId={issue.id} />
+                            )}
                           </div>
                         </td>
                       </tr>
