@@ -2,7 +2,7 @@
   "/_app": "pages/_app.js",
   "/_error": "pages/_error.js",
   "/_document": "pages/_document.js",
+  "/annualTrend": "pages/annualTrend.js",
   "/issues": "pages/issues.js",
-  "/": "pages/index.js",
-  "/annualTrend": "pages/annualTrend.js"
+  "/annual": "pages/annual.js"
 }

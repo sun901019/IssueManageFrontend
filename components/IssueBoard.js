@@ -204,13 +204,13 @@ export default function IssueBoard() {
   const getStatusBadgeClass = (status) => {
     switch (status) {
       case 'Pending':
-        return 'bg-warning text-dark';
+        return 'bg-warning bg-opacity-75 text-dark';
       case 'In Progress':
-        return 'bg-primary';
+        return 'bg-primary bg-opacity-75';
       case 'Closed':
-        return 'bg-success';
+        return 'bg-success bg-opacity-75';
       default:
-        return 'bg-secondary';
+        return 'bg-secondary bg-opacity-75';
     }
   };
 
@@ -234,23 +234,27 @@ export default function IssueBoard() {
     <div className="container-fluid p-0">
       {/* 新增 Issue 按鈕 */}
       <div className="d-flex justify-content-between align-items-center mb-3">
-        <button className="btn btn-success" onClick={() => setIsAdding(true)}>
+        <button className="btn btn-success shadow-sm" onClick={() => setIsAdding(true)}>
           <i className="bi bi-plus-circle me-1"></i> 新增 Issue
         </button>
-        <div className="d-flex gap-2">
+        <div className="d-flex align-items-center gap-2 bg-light p-2 rounded shadow-sm">
           {/* 日期筛选 */}
           <div className="d-flex align-items-center">
+            <span className="text-secondary me-2">
+              <i className="bi bi-calendar-event me-1"></i>
+              日期:
+            </span>
             <input
               type="date"
-              className="form-control form-control-sm me-2"
+              className="form-control form-control-sm me-1 shadow-sm"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
               placeholder="开始日期"
             />
-            <span className="me-2">至</span>
+            <span className="text-secondary mx-1">至</span>
             <input
               type="date"
-              className="form-control form-control-sm me-2"
+              className="form-control form-control-sm me-2 shadow-sm"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
               placeholder="结束日期"
@@ -260,7 +264,7 @@ export default function IssueBoard() {
           {/* 状态筛选 */}
           <div className="dropdown me-2">
             <button 
-              className="btn btn-outline-secondary dropdown-toggle" 
+              className="btn btn-sm btn-outline-secondary shadow-sm dropdown-toggle"
               type="button" 
               id="dropdownMenuButton" 
               data-bs-toggle="dropdown" 
@@ -271,53 +275,47 @@ export default function IssueBoard() {
                statusFilter === 'Pending' ? '待處理' :
                statusFilter === 'In Progress' ? '處理中' : '已完成'}
             </button>
-            <ul className="dropdown-menu" aria-labelledby="dropdownMenuButton">
+            <ul className="dropdown-menu shadow" aria-labelledby="dropdownMenuButton">
               <li>
                 <button 
                   className={`dropdown-item ${statusFilter === 'all' ? 'active' : ''}`}
                   onClick={() => setStatusFilter('all')}
                 >
+                  <i className="bi bi-check-all me-2"></i>
                   顯示全部
                 </button>
               </li>
-              <li>
-                <button 
-                  className={`dropdown-item ${statusFilter === 'Pending' ? 'active' : ''}`}
-                  onClick={() => setStatusFilter('Pending')}
-                >
-                  僅顯示待處理
-                </button>
-              </li>
-              <li>
-                <button 
-                  className={`dropdown-item ${statusFilter === 'In Progress' ? 'active' : ''}`}
-                  onClick={() => setStatusFilter('In Progress')}
-                >
-                  僅顯示進行中
-                </button>
-              </li>
-              <li>
-                <button 
-                  className={`dropdown-item ${statusFilter === 'Closed' ? 'active' : ''}`}
-                  onClick={() => setStatusFilter('Closed')}
-                >
-                  僅顯示已完成
-                </button>
-              </li>
+              {statusOptions.map(option => (
+                <li key={option.value}>
+                  <button 
+                    className={`dropdown-item ${statusFilter === option.value ? 'active' : ''}`}
+                    onClick={() => setStatusFilter(option.value)}
+                  >
+                    <i className={`bi ${option.icon} me-2`}></i>
+                    僅顯示{option.label}
+                  </button>
+                </li>
+              ))}
             </ul>
           </div>
           
           {/* 重置筛选按钮 */}
           <button 
-            className="btn btn-outline-secondary me-2" 
+            className="btn btn-sm btn-outline-secondary shadow-sm me-2"
             onClick={resetFilters}
+            title="重置筛选"
           >
             <i className="bi bi-x-circle me-1"></i>
-            重置筛选
+            重置
           </button>
           
-          <button className="btn btn-outline-primary" onClick={fetchIssues}>
-            <i className="bi bi-arrow-clockwise me-1"></i> 刷新資料
+          <button 
+            className="btn btn-sm btn-outline-primary shadow-sm"
+            onClick={fetchIssues}
+            title="刷新数据"
+          >
+            <i className="bi bi-arrow-clockwise me-1"></i>
+            刷新
           </button>
         </div>
       </div>
@@ -340,19 +338,19 @@ export default function IssueBoard() {
       ) : (
         /* Issue 列表 */
         <div className="card shadow-sm border-0">
-          <div className="card-body">
+          <div className="card-body p-0">
             <div className="table-responsive">
-              <table className="table table-hover table-striped">
+              <table className="table table-hover table-sm align-middle mb-0">
                 <thead className="table-light">
-                  <tr>
-                    <th style={{ width: "20%" }}>客戶名稱</th>
-                    <th style={{ width: "10%" }}>來源</th>
-                    <th style={{ width: "10%" }}>問題類型</th>
-                    <th style={{ width: "10%" }}>狀態</th>
-                    <th style={{ width: "10%" }}>負責人</th>
-                    <th style={{ width: "12%" }}>建立日期</th>
-                    <th style={{ width: "12%" }}>保固到期日</th>
-                    <th style={{ width: "16%" }}>操作</th>
+                  <tr className="text-secondary">
+                    <th style={{ width: "20%" }} className="px-3 py-2">客戶名稱</th>
+                    <th style={{ width: "10%" }} className="px-3 py-2">來源</th>
+                    <th style={{ width: "10%" }} className="px-3 py-2">問題類型</th>
+                    <th style={{ width: "10%" }} className="px-3 py-2">狀態</th>
+                    <th style={{ width: "10%" }} className="px-3 py-2">負責人</th>
+                    <th style={{ width: "12%" }} className="px-3 py-2">建立日期</th>
+                    <th style={{ width: "12%" }} className="px-3 py-2">保固到期日</th>
+                    <th style={{ width: "16%" }} className="px-3 py-2">操作</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -375,27 +373,28 @@ export default function IssueBoard() {
                       </td>
                     </tr>
                   ) : (
-                    getCurrentPageData().map((issue) => (
+                    getCurrentPageData().map((issue, idx) => (
                       <React.Fragment key={issue.id}>
                         <tr
-                          className={expandedIssueId === issue.id ? "table-active" : ""}
+                          className={`${expandedIssueId === issue.id ? "table-active" : idx % 2 === 0 ? "table-light" : ""}`}
                           onClick={() => handleExpand(issue.id)}
                           style={{ cursor: "pointer" }}
                         >
-                          <td>{issue.title}</td>
-                          <td>{issue.source || "-"}</td>
-                          <td>{issue.issue_type || "-"}</td>
-                          <td>
+                          <td className="px-3 py-2 text-truncate" style={{ maxWidth: "250px" }}>{issue.title}</td>
+                          <td className="px-3 py-2">{issue.source || "-"}</td>
+                          <td className="px-3 py-2">{issue.issue_type || "-"}</td>
+                          <td className="px-3 py-2">
                             <div className="dropdown" onClick={(e) => e.stopPropagation()}>
                               <span
-                                className={`badge ${getStatusBadgeClass(issue.status)} dropdown-toggle`}
+                                className={`badge rounded-pill ${getStatusBadgeClass(issue.status)} px-3 py-2 shadow-sm dropdown-toggle`}
                                 role="button"
                                 data-bs-toggle="dropdown"
                                 aria-expanded="false"
                               >
+                                <i className={`bi ${statusOptions.find(s => s.value === issue.status)?.icon} me-1`}></i>
                                 {statusOptions.find(s => s.value === issue.status)?.label || issue.status}
                               </span>
-                              <ul className="dropdown-menu">
+                              <ul className="dropdown-menu shadow-sm">
                                 {statusOptions.map(option => (
                                   <li key={option.value}>
                                     <button
@@ -410,49 +409,63 @@ export default function IssueBoard() {
                               </ul>
                             </div>
                           </td>
-                          <td>{issue.assigned_to || "-"}</td>
-                          <td>
+                          <td className="px-3 py-2">
+                            {issue.assigned_to ? 
+                              <span className="d-inline-flex align-items-center">
+                                <i className="bi bi-person-circle me-1 text-secondary"></i>
+                                {issue.assigned_to}
+                              </span> : 
+                              <span className="text-muted fst-italic">未指派</span>
+                            }
+                          </td>
+                          <td className="px-3 py-2">
                             {issue.created_at
                               ? new Date(issue.created_at).toLocaleDateString()
-                              : "-"}
+                              : <span className="text-muted fst-italic">-</span>}
                           </td>
-                          <td>
+                          <td className="px-3 py-2">
                             {issue.warranty_end_date
                               ? new Date(issue.warranty_end_date).toLocaleDateString()
-                              : "-"}
+                              : <span className="text-muted fst-italic">-</span>}
                           </td>
-                          <td>
-                            <div className="btn-group btn-group-sm">
+                          <td className="px-3 py-2">
+                            <div className="d-flex gap-1">
                               <button
-                                className="btn btn-primary btn-sm me-1 mb-1"
+                                className="btn btn-sm btn-outline-primary rounded-circle"
+                                style={{ width: "32px", height: "32px" }}
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   handleExpand(issue.id);
                                 }}
+                                title={expandedIssueId === issue.id ? "收起" : "展開"}
                               >
-                                {expandedIssueId === issue.id ? "收起" : "展開"}
+                                <i className={`bi ${expandedIssueId === issue.id ? "bi-chevron-up" : "bi-chevron-down"}`}></i>
                               </button>
                               
                               <button
-                                className="btn btn-info btn-sm me-1 mb-1"
+                                className="btn btn-sm btn-outline-info rounded-circle"
+                                style={{ width: "32px", height: "32px" }}
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   setEditingIssueId(issue.id);
                                 }}
+                                title="編輯"
                               >
-                                編輯
+                                <i className="bi bi-pencil"></i>
                               </button>
                               
                               <button
-                                className="btn btn-danger btn-sm mb-1"
+                                className="btn btn-sm btn-outline-danger rounded-circle"
+                                style={{ width: "32px", height: "32px" }}
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   if (window.confirm("確定要刪除這個 Issue 嗎？")) {
                                     deleteIssue(issue.id);
                                   }
                                 }}
+                                title="刪除"
                               >
-                                刪除
+                                <i className="bi bi-trash"></i>
                               </button>
                             </div>
                           </td>
@@ -526,18 +539,20 @@ export default function IssueBoard() {
 
             {/* 分页导航 */}
             {filteredIssues.length > 0 && (
-              <div className="d-flex justify-content-between align-items-center mt-3">
-                <div className="text-muted">
-                  共 {filteredIssues.length} 筆資料，第 {currentPage} 頁，共 {totalPages} 頁
+              <div className="d-flex justify-content-between align-items-center bg-light p-3 rounded-bottom border-top">
+                <div className="text-secondary small">
+                  <i className="bi bi-info-circle me-1"></i>
+                  共 <span className="fw-bold">{filteredIssues.length}</span> 筆資料，第 <span className="fw-bold">{currentPage}</span> 頁，共 <span className="fw-bold">{totalPages}</span> 頁
                 </div>
                 <nav aria-label="Page navigation">
-                  <ul className="pagination mb-0">
+                  <ul className="pagination pagination-sm mb-0">
                     {/* 上一页按钮 */}
                     <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
                       <button
                         className="page-link"
                         onClick={() => handlePageChange(currentPage - 1)}
                         disabled={currentPage === 1}
+                        aria-label="Previous"
                       >
                         <i className="bi bi-chevron-left"></i>
                       </button>
@@ -564,6 +579,7 @@ export default function IssueBoard() {
                         className="page-link"
                         onClick={() => handlePageChange(currentPage + 1)}
                         disabled={currentPage === totalPages}
+                        aria-label="Next"
                       >
                         <i className="bi bi-chevron-right"></i>
                       </button>
