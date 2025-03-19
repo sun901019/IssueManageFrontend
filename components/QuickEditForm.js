@@ -8,9 +8,8 @@ const QuickEditForm = ({ issue, onUpdate, onCancel }) => {
     description: issue.description || '',
     source: issue.source,
     issue_type: issue.issue_type || '',
-    status: issue.status,
-    priority: issue.priority || '中',
-    estimated_hours: issue.estimated_hours || '',
+    status: issue.status || 'Pending',
+    warranty_end_date: issue.warranty_end_date || '',
     assigned_to: issue.assigned_to || ''
   });
   
@@ -150,13 +149,14 @@ const QuickEditForm = ({ issue, onUpdate, onCancel }) => {
   const sourceOptions = ["業務", "Line chat", "現場", "Email", "電話", "客戶主動回報"];
   
   // 可用的問題類型選項
-  const issueTypeOptions = [
-    "系統功能", "硬體", "網路", "軟體", "資料庫", "帳號權限", 
-    "操作問題", "培訓需求", "安全性問題", "效能問題", "其他"
+  const issueTypeOptions = ["系統", "系統功能", "網路", "設備"];
+
+  // 可用的狀態選項
+  const statusOptions = [
+    { value: "Pending", label: "待處理" },
+    { value: "In Progress", label: "處理中" },
+    { value: "Closed", label: "已完成" }
   ];
-  
-  // 優先級選項
-  const priorityOptions = ["高", "中", "低"];
   
   return (
     <div className="quick-edit-form">
@@ -247,44 +247,29 @@ const QuickEditForm = ({ issue, onUpdate, onCancel }) => {
               value={formData.status}
               onChange={handleChange}
             >
-              <option value="Pending">Pending</option>
-              <option value="In Progress">In Progress</option>
-              <option value="Closed">Closed</option>
+              {statusOptions.map(option => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
             </select>
           </div>
         </div>
         
         <div className="row">
-          <div className="col-md-4 mb-3">
-            <label htmlFor="priority" className="form-label fw-bold">優先級</label>
-            <select
-              className="form-select"
-              id="priority"
-              name="priority"
-              value={formData.priority}
-              onChange={handleChange}
-            >
-              {priorityOptions.map(option => (
-                <option key={option} value={option}>{option}</option>
-              ))}
-            </select>
-          </div>
-          
-          <div className="col-md-4 mb-3">
-            <label htmlFor="estimated_hours" className="form-label fw-bold">預估時數</label>
+          <div className="col-md-6 mb-3">
+            <label htmlFor="warranty_end_date" className="form-label fw-bold">保固到期日</label>
             <input
-              type="number"
+              type="date"
               className="form-control"
-              id="estimated_hours"
-              name="estimated_hours"
-              value={formData.estimated_hours}
+              id="warranty_end_date"
+              name="warranty_end_date"
+              value={formData.warranty_end_date}
               onChange={handleChange}
-              min="0"
-              step="0.5"
             />
           </div>
           
-          <div className="col-md-4 mb-3">
+          <div className="col-md-6 mb-3">
             <label htmlFor="assigned_to" className="form-label fw-bold">負責人</label>
             <input
               type="text"

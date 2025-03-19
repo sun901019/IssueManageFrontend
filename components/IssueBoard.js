@@ -23,9 +23,10 @@ export default function IssueBoard() {
   const fetchIssues = async () => {
     try {
       setLoading(true);
-      const res = await axios.get("/issues");
-      setIssues(res.data || []);  // 直接使用 res.data，不再嘗試訪問 res.data.issues
-      console.log("API 返回數據:", res.data);  // 添加日誌，用於調試
+      // 默认按创建日期降序排序
+      const res = await axios.get("/issues?sort=created_at:desc");
+      setIssues(res.data || []);
+      console.log("API 返回數據:", res.data);
     } catch (error) {
       console.error("載入 Issue 失敗", error);
     } finally {
@@ -98,6 +99,36 @@ export default function IssueBoard() {
     setActiveTab("details"); // 預設顯示詳情標籤
   };
 
+  // 根据状态返回对应的Bootstrap样式类
+  const getStatusBadgeClass = (status) => {
+    switch (status) {
+      case 'Pending':
+        return 'bg-warning text-dark';
+      case 'In Progress':
+        return 'bg-primary';
+      case 'Closed':
+        return 'bg-success';
+      default:
+        return 'bg-secondary';
+    }
+  };
+
+  // 可用的狀態選項
+  const statusOptions = [
+    { value: "Pending", label: "待處理", icon: "bi-hourglass" },
+    { value: "In Progress", label: "處理中", icon: "bi-play-circle" },
+    { value: "Closed", label: "已完成", icon: "bi-check-circle" }
+  ];
+
+  // 快速更新狀態
+  const handleQuickStatusUpdate = async (issueId, newStatus) => {
+    try {
+      await updateIssueStatus(issueId, newStatus);
+    } catch (error) {
+      console.error("更新狀態失敗:", error);
+    }
+  };
+
   return (
     <div className="container-fluid p-0">
       {/* 新增 Issue 按鈕 */}
@@ -147,69 +178,110 @@ export default function IssueBoard() {
               <table className="table table-hover table-striped">
                 <thead className="table-light">
                   <tr>
-                    <th>標題</th>
-                    <th>來源</th>
-                    <th>問題類型</th>
-                    <th>狀態</th>
-                    <th>建立日期</th>
-                    <th style={{minWidth: '200px'}}>操作</th>
+                    <th style={{ width: "5%" }}>#</th>
+                    <th style={{ width: "15%" }}>客戶名稱</th>
+                    <th style={{ width: "10%" }}>來源</th>
+                    <th style={{ width: "10%" }}>問題類型</th>
+                    <th style={{ width: "10%" }}>狀態</th>
+                    <th style={{ width: "10%" }}>負責人</th>
+                    <th style={{ width: "10%" }}>建立日期</th>
+                    <th style={{ width: "10%" }}>保固到期日</th>
+                    <th style={{ width: "20%" }}>操作</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {issues.length === 0 ? (
+                  {loading ? (
                     <tr>
-                      <td colSpan="6" className="text-center text-muted py-5">
-                        <i className="bi bi-inbox fs-1 d-block mb-2"></i>
-                        暫無問題記錄
+                      <td colSpan="9" className="text-center py-4">
+                        <div className="spinner-border text-primary" role="status">
+                          <span className="visually-hidden">Loading...</span>
+                        </div>
+                        <p className="mt-2 text-muted">載入中...</p>
+                      </td>
+                    </tr>
+                  ) : issues.length === 0 ? (
+                    <tr>
+                      <td colSpan="9" className="text-center py-4">
+                        <p className="text-muted mb-0">
+                          <i className="bi bi-inbox me-2"></i>
+                          目前沒有任何 Issue
+                        </p>
                       </td>
                     </tr>
                   ) : (
                     issues.map((issue) => (
                       <React.Fragment key={issue.id}>
-                        <tr>
+                        <tr
+                          className={expandedIssueId === issue.id ? "table-active" : ""}
+                          onClick={() => handleExpand(issue.id)}
+                          style={{ cursor: "pointer" }}
+                        >
+                          <td>{issue.id}</td>
                           <td>{issue.title}</td>
-                          <td>{issue.source}</td>
-                          <td>{issue.issue_type || "未分類"}</td>
+                          <td>{issue.source || "-"}</td>
+                          <td>{issue.issue_type || "-"}</td>
                           <td>
-                            <select
-                              className="form-select form-select-sm"
-                              value={issue.status}
-                              onChange={(e) =>
-                                updateIssueStatus(issue.id, e.target.value)
-                              }
-                            >
-                              {statuses.map((status) => (
-                                <option key={status} value={status}>
-                                  {status}
-                                </option>
-                              ))}
-                            </select>
+                            <div className="dropdown" onClick={(e) => e.stopPropagation()}>
+                              <span
+                                className={`badge ${getStatusBadgeClass(issue.status)} dropdown-toggle`}
+                                role="button"
+                                data-bs-toggle="dropdown"
+                                aria-expanded="false"
+                              >
+                                {statusOptions.find(s => s.value === issue.status)?.label || issue.status}
+                              </span>
+                              <ul className="dropdown-menu">
+                                {statusOptions.map(option => (
+                                  <li key={option.value}>
+                                    <button
+                                      className="dropdown-item"
+                                      onClick={() => handleQuickStatusUpdate(issue.id, option.value)}
+                                    >
+                                      <i className={`bi ${option.icon} me-2`}></i>
+                                      {option.label}
+                                    </button>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
                           </td>
+                          <td>{issue.assigned_to || "-"}</td>
                           <td>
                             {issue.created_at
                               ? new Date(issue.created_at).toLocaleDateString()
-                              : "無效日期"}
+                              : "-"}
                           </td>
                           <td>
-                            <div className="d-flex flex-wrap">
+                            {issue.warranty_end_date
+                              ? new Date(issue.warranty_end_date).toLocaleDateString()
+                              : "-"}
+                          </td>
+                          <td>
+                            <div className="btn-group btn-group-sm">
                               <button
                                 className="btn btn-primary btn-sm me-1 mb-1"
-                                onClick={() => handleExpand(issue.id)}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleExpand(issue.id);
+                                }}
                               >
                                 {expandedIssueId === issue.id ? "收起" : "展開"}
                               </button>
                               
-                              {/* 新增：快速編輯按鈕 */}
                               <button
                                 className="btn btn-info btn-sm me-1 mb-1"
-                                onClick={() => setEditingIssueId(issue.id)}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setEditingIssueId(issue.id);
+                                }}
                               >
                                 編輯
                               </button>
                               
                               <button
                                 className="btn btn-danger btn-sm mb-1"
-                                onClick={() => {
+                                onClick={(e) => {
+                                  e.stopPropagation();
                                   if (window.confirm("確定要刪除這個 Issue 嗎？")) {
                                     deleteIssue(issue.id);
                                   }
@@ -224,7 +296,7 @@ export default function IssueBoard() {
                         {/* 快速編輯表單 */}
                         {editingIssueId === issue.id && (
                           <tr>
-                            <td colSpan="6">
+                            <td colSpan="9">
                               <QuickEditForm 
                                 issue={issue} 
                                 onUpdate={handleQuickEditSave}
@@ -237,7 +309,7 @@ export default function IssueBoard() {
                         {/* 展開的詳情或評論 */}
                         {expandedIssueId === issue.id && (
                           <tr>
-                            <td colSpan="6">
+                            <td colSpan="9">
                               <div className="p-3 bg-light rounded">
                                 {/* 添加標籤頁切換 */}
                                 <ul className="nav nav-tabs mb-3">

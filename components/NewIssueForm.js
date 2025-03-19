@@ -9,8 +9,7 @@ export default function NewIssueForm({ onClose, onIssueAdded }) {
     issue_type: "系統功能",
     status: "Pending",
     created_at: "",
-    priority: "中",
-    estimated_hours: "",
+    warranty_end_date: "",
     assigned_to: ""
   });
   
@@ -116,17 +115,18 @@ export default function NewIssueForm({ onClose, onIssueAdded }) {
     }
   };
 
-  // 問題類型選項
-  const issueTypes = [
-    "系統功能", "硬體", "網路", "軟體", "資料庫", "帳號權限", 
-    "操作問題", "培訓需求", "安全性問題", "效能問題", "其他"
-  ];
+  // 可用的問題類型選項
+  const issueTypeOptions = ["系統", "系統功能", "網路", "設備"];
   
   // 來源選項
   const sourceOptions = ["業務", "Line chat", "現場", "Email", "電話", "客戶主動回報"];
-  
-  // 優先級選項
-  const priorityOptions = ["高", "中", "低"];
+
+  // 狀態選項
+  const statusOptions = [
+    { value: "Pending", label: "待處理" },
+    { value: "In Progress", label: "處理中" },
+    { value: "Closed", label: "已完成" }
+  ];
 
   return (
     <div className="modal fade show d-block" tabIndex="-1" role="dialog">
@@ -199,7 +199,7 @@ export default function NewIssueForm({ onClose, onIssueAdded }) {
                       value={formData.issue_type}
                       onChange={handleChange}
                     >
-                      {issueTypes.map(type => (
+                      {issueTypeOptions.map(type => (
                         <option key={type} value={type}>{type}</option>
                       ))}
                     </select>
@@ -216,37 +216,36 @@ export default function NewIssueForm({ onClose, onIssueAdded }) {
                       onChange={handleChange}
                     />
                   </div>
+
+                  {/* 狀態 */}
+                  <div className="mb-3">
+                    <label className="form-label fw-bold">狀態</label>
+                    <select
+                      className="form-select"
+                      name="status"
+                      value={formData.status}
+                      onChange={handleChange}
+                    >
+                      {statusOptions.map(option => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
                 
                 {/* 右側欄位 */}
                 <div className="col-md-6">
-                  {/* 優先級 */}
+                  {/* 保固到期日 */}
                   <div className="mb-3">
-                    <label className="form-label fw-bold">優先級</label>
-                    <select
-                      className="form-select"
-                      name="priority"
-                      value={formData.priority}
-                      onChange={handleChange}
-                    >
-                      {priorityOptions.map(option => (
-                        <option key={option} value={option}>{option}</option>
-                      ))}
-                    </select>
-                  </div>
-                  
-                  {/* 預估時數 */}
-                  <div className="mb-3">
-                    <label className="form-label fw-bold">預估處理時數</label>
+                    <label className="form-label fw-bold">保固到期日</label>
                     <input
-                      type="number"
+                      type="date"
                       className="form-control"
-                      name="estimated_hours"
-                      value={formData.estimated_hours}
+                      name="warranty_end_date"
+                      value={formData.warranty_end_date}
                       onChange={handleChange}
-                      placeholder="輸入預估時數"
-                      min="0"
-                      step="0.5"
                     />
                   </div>
                   
