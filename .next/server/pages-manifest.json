@@ -2,8 +2,8 @@
   "/_app": "pages/_app.js",
   "/_error": "pages/_error.js",
   "/_document": "pages/_document.js",
-  "/issues": "pages/issues.js",
-  "/annual": "pages/annual.js",
   "/annualTrend": "pages/annualTrend.js",
-  "/": "pages/index.js"
+  "/": "pages/index.js",
+  "/issues": "pages/issues.js",
+  "/annual": "pages/annual.js"
 }

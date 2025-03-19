@@ -87,8 +87,8 @@ export default function AnnualPage() {
 
   if (loading) return <div>載入中...</div>;
   if (error) return <div className="error">{error}</div>;
-  if (!annualData) return null;
-
+    if (!annualData) return null;
+    
   const completionRate = Math.round((annualData.completed / annualData.totalIssues) * 100);
 
   return (
@@ -105,10 +105,10 @@ export default function AnnualPage() {
               <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
               </svg>
-            </div>
+                </div>
             <div className="stat-value blue">{annualData.totalIssues}</div>
             <div className="stat-label">問題總數</div>
-          </div>
+              </div>
           <div className="stat-card">
             <div className="stat-icon rate">
               <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -140,12 +140,12 @@ export default function AnnualPage() {
             <div className="stat-value yellow">{annualData.uncompleted}</div>
             <div className="stat-label">未完成問題</div>
           </div>
-        </div>
+                  </div>
 
         <div className="content-section">
           <div className="section-header">
             <h2>詳細分析</h2>
-          </div>
+                  </div>
           
           <div className="charts-grid">
             <div className="chart-container">
@@ -230,7 +230,7 @@ export default function AnnualPage() {
                       <polyline points="7 10 12 15 17 10"/>
                       <line x1="12" y1="15" x2="12" y2="3"/>
                     </svg>
-                  </button>
+                      </button>
                 </div>
               </div>
               <div className="chart-wrapper">
@@ -254,9 +254,9 @@ export default function AnnualPage() {
                   }}
                   options={chartOptions}
                 />
-              </div>
-            </div>
-          </div>
+                    </div>
+                  </div>
+                </div>
 
           <div className="stats-details">
             <div className="stats-table">
@@ -269,18 +269,18 @@ export default function AnnualPage() {
                       <polyline points="7 10 12 15 17 10"/>
                       <line x1="12" y1="15" x2="12" y2="3"/>
                     </svg>
-                  </button>
+                        </button>
                 </div>
-              </div>
+                      </div>
               <table>
                 <thead>
                   <tr>
                     <th>來源</th>
                     <th>數量</th>
                     <th>佔比</th>
-                  </tr>
-                </thead>
-                <tbody>
+                            </tr>
+                          </thead>
+                          <tbody>
                   <tr>
                     <td>Line chat</td>
                     <td>45</td>
@@ -290,15 +290,15 @@ export default function AnnualPage() {
                     <td>業務</td>
                     <td>3</td>
                     <td>5%</td>
-                  </tr>
-                  <tr>
+                              </tr>
+                              <tr>
                     <td>現場</td>
                     <td>8</td>
                     <td>14%</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+                              </tr>
+                          </tbody>
+                        </table>
+                      </div>
 
             <div className="stats-table">
               <div className="table-header">
@@ -312,16 +312,16 @@ export default function AnnualPage() {
                     </svg>
                   </button>
                 </div>
-              </div>
+                    </div>
               <table>
                 <thead>
                   <tr>
                     <th>類型</th>
                     <th>數量</th>
                     <th>佔比</th>
-                  </tr>
-                </thead>
-                <tbody>
+                            </tr>
+                          </thead>
+                          <tbody>
                   <tr>
                     <td>系統</td>
                     <td>19</td>
@@ -331,24 +331,24 @@ export default function AnnualPage() {
                     <td>設備</td>
                     <td>25</td>
                     <td>45%</td>
-                  </tr>
-                  <tr>
+                              </tr>
+                              <tr>
                     <td>系統功能</td>
                     <td>12</td>
                     <td>21%</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
+                              </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
 
         <style jsx>{`
           .annual-report {
             padding: 24px 32px;
             max-width: 1600px;
             margin: 0 auto;
-            background: #f8fafb;
+            background: #F8FAFB;
             min-height: calc(100vh - 64px);
           }
 
@@ -357,16 +357,18 @@ export default function AnnualPage() {
           }
 
           .page-title {
-            font-size: 18px;
+            font-size: 20px;
             color: #1a1a1a;
             font-weight: 600;
             margin: 0 0 8px 0;
+            letter-spacing: -0.02em;
           }
 
           .page-subtitle {
             font-size: 14px;
             color: #666;
             margin: 0;
+            letter-spacing: -0.01em;
           }
 
           .stats-cards {
@@ -379,7 +381,7 @@ export default function AnnualPage() {
           .stat-card {
             background: #fff;
             border-radius: 12px;
-            padding: 24px;
+            padding: 28px;
             transition: all 0.3s ease;
             border: 1px solid #f0f0f0;
             position: relative;
@@ -388,6 +390,7 @@ export default function AnnualPage() {
 
           .stat-card:hover {
             transform: translateY(-2px);
+            border-color: #e5e7eb;
             box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
           }
 
@@ -395,43 +398,40 @@ export default function AnnualPage() {
             position: absolute;
             top: 24px;
             right: 24px;
-            opacity: 0.15;
+            opacity: 0.12;
             transition: all 0.3s ease;
           }
 
           .stat-card:hover .stat-icon {
             transform: scale(1.1);
-            opacity: 0.2;
+            opacity: 0.15;
           }
-
-          .total { color: #4A90E2; }
-          .rate { color: #50E3C2; }
-          .completed { color: #50E3C2; }
-          .pending { color: #F5A623; }
 
           .stat-value {
             font-size: 36px;
             font-weight: 600;
             margin: 24px 0 8px;
             line-height: 1.2;
+            letter-spacing: -0.02em;
           }
 
           .stat-label {
             color: #666;
             font-size: 14px;
             font-weight: 500;
+            letter-spacing: -0.01em;
           }
 
           .blue { color: #4A90E2; }
-          .green { color: #50E3C2; }
-          .cyan { color: #50E3C2; }
-          .yellow { color: #F5A623; }
+          .green { color: #34D399; }
+          .cyan { color: #34D399; }
+          .yellow { color: #F59E0B; }
 
           .content-section {
             background: #fff;
-            border-radius: 12px;
+            border-radius: 16px;
             border: 1px solid #f0f0f0;
-            padding: 40px;
+            padding: 32px;
           }
 
           .section-header {
@@ -444,13 +444,14 @@ export default function AnnualPage() {
             color: #1a1a1a;
             font-weight: 600;
             margin: 0;
+            letter-spacing: -0.01em;
           }
 
           .charts-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 32px;
-            margin-bottom: 40px;
+            gap: 24px;
+            margin-bottom: 32px;
             padding: 0 8px;
           }
 
@@ -463,6 +464,7 @@ export default function AnnualPage() {
           }
 
           .chart-container:hover {
+            border-color: #e5e7eb;
             box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
           }
 
@@ -479,6 +481,7 @@ export default function AnnualPage() {
             color: #1a1a1a;
             font-weight: 600;
             margin: 0;
+            letter-spacing: -0.01em;
           }
 
           .chart-wrapper {
@@ -491,7 +494,7 @@ export default function AnnualPage() {
           .stats-details {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            gap: 32px;
+            gap: 24px;
             padding: 0 8px;
           }
 
@@ -504,6 +507,7 @@ export default function AnnualPage() {
           }
 
           .stats-table:hover {
+            border-color: #e5e7eb;
             box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
           }
 
@@ -520,6 +524,7 @@ export default function AnnualPage() {
             color: #1a1a1a;
             font-weight: 600;
             margin: 0;
+            letter-spacing: -0.01em;
           }
 
           table {
@@ -601,8 +606,12 @@ export default function AnnualPage() {
           }
 
           @media (max-width: 1024px) {
+            .stats-cards {
+              grid-template-columns: repeat(2, 1fr);
+            }
+
             .content-section {
-              padding: 32px;
+              padding: 28px;
             }
 
             .charts-grid {
@@ -619,8 +628,16 @@ export default function AnnualPage() {
           }
 
           @media (max-width: 640px) {
+            .annual-report {
+              padding: 16px;
+            }
+
             .content-section {
-              padding: 24px;
+              padding: 20px;
+            }
+
+            .stats-cards {
+              gap: 16px;
             }
 
             .charts-grid,
