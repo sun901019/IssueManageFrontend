@@ -25,16 +25,6 @@ self.__BUILD_MANIFEST = {
       "static/chunks/main.js",
       "static/chunks/pages/_error.js"
     ],
-    "/annual": [
-      "static/chunks/webpack.js",
-      "static/chunks/main.js",
-      "static/chunks/pages/annual.js"
-    ],
-    "/annualTrend": [
-      "static/chunks/webpack.js",
-      "static/chunks/main.js",
-      "static/chunks/pages/annualTrend.js"
-    ],
     "/issues": [
       "static/chunks/webpack.js",
       "static/chunks/main.js",

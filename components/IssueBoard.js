@@ -14,10 +14,111 @@ export default function IssueBoard() {
   const [activeTab, setActiveTab] = useState("details"); // 添加 tab 狀態: details 或 comments
   const [editingIssueId, setEditingIssueId] = useState(null); // 添加編輯狀態
   const [loading, setLoading] = useState(true); // 添加載入狀態
+  
+  // 添加分页状态
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
+  
+  // 添加筛选状态
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [filteredIssues, setFilteredIssues] = useState([]);
 
   useEffect(() => {
     fetchIssues();
   }, []);
+
+  // 添加筛选逻辑
+  useEffect(() => {
+    filterIssues();
+  }, [issues, statusFilter, startDate, endDate]);
+
+  // 筛选功能
+  const filterIssues = () => {
+    let filtered = [...issues];
+
+    // 状态筛选
+    if (statusFilter !== 'all') {
+      filtered = filtered.filter(issue => issue.status === statusFilter);
+    }
+
+    // 日期筛选
+    if (startDate) {
+      filtered = filtered.filter(issue => 
+        issue.created_at && new Date(issue.created_at) >= new Date(startDate)
+      );
+    }
+    if (endDate) {
+      filtered = filtered.filter(issue => 
+        issue.created_at && new Date(issue.created_at) <= new Date(endDate)
+      );
+    }
+
+    setFilteredIssues(filtered);
+  };
+
+  // 重置筛选
+  const resetFilters = () => {
+    setStatusFilter('all');
+    setStartDate('');
+    setEndDate('');
+    setCurrentPage(1); // 重置页码
+  };
+
+  // 计算当前页的数据
+  const getCurrentPageData = () => {
+    const indexOfLastItem = currentPage * itemsPerPage;
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+    return filteredIssues.slice(indexOfFirstItem, indexOfLastItem);
+  };
+
+  // 处理页码变化
+  const handlePageChange = (pageNumber) => {
+    setCurrentPage(pageNumber);
+    setExpandedIssueId(null); // 换页时收起展开的行
+    setEditingIssueId(null); // 换页时关闭编辑状态
+  };
+
+  // 计算总页数
+  const totalPages = Math.ceil(filteredIssues.length / itemsPerPage);
+
+  // 生成页码数组
+  const getPageNumbers = () => {
+    const pageNumbers = [];
+    const maxVisiblePages = 5; // 最多显示5个页码
+    
+    if (totalPages <= maxVisiblePages) {
+      // 如果总页数小于等于5，显示所有页码
+      for (let i = 1; i <= totalPages; i++) {
+        pageNumbers.push(i);
+      }
+    } else {
+      // 如果总页数大于5，显示当前页附近的页码
+      let startPage = Math.max(1, currentPage - 2);
+      let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+      
+      if (endPage - startPage < maxVisiblePages - 1) {
+        startPage = Math.max(1, endPage - maxVisiblePages + 1);
+      }
+      
+      if (startPage > 1) {
+        pageNumbers.push(1);
+        if (startPage > 2) pageNumbers.push('...');
+      }
+      
+      for (let i = startPage; i <= endPage; i++) {
+        pageNumbers.push(i);
+      }
+      
+      if (endPage < totalPages) {
+        if (endPage < totalPages - 1) pageNumbers.push('...');
+        pageNumbers.push(totalPages);
+      }
+    }
+    
+    return pageNumbers;
+  };
 
   // 取得 Issue 清單
   const fetchIssues = async () => {
@@ -136,22 +237,88 @@ export default function IssueBoard() {
         <button className="btn btn-success" onClick={() => setIsAdding(true)}>
           <i className="bi bi-plus-circle me-1"></i> 新增 Issue
         </button>
-        <div className="d-flex">
-          <button className="btn btn-outline-primary me-2" onClick={fetchIssues}>
-            <i className="bi bi-arrow-clockwise me-1"></i> 刷新資料
-          </button>
-          <div className="dropdown">
-            <button className="btn btn-outline-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
-              <i className="bi bi-sliders me-1"></i> 篩選選項
+        <div className="d-flex gap-2">
+          {/* 日期筛选 */}
+          <div className="d-flex align-items-center">
+            <input
+              type="date"
+              className="form-control form-control-sm me-2"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              placeholder="开始日期"
+            />
+            <span className="me-2">至</span>
+            <input
+              type="date"
+              className="form-control form-control-sm me-2"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              placeholder="结束日期"
+            />
+          </div>
+          
+          {/* 状态筛选 */}
+          <div className="dropdown me-2">
+            <button 
+              className="btn btn-outline-secondary dropdown-toggle" 
+              type="button" 
+              id="dropdownMenuButton" 
+              data-bs-toggle="dropdown" 
+              aria-expanded="false"
+            >
+              <i className="bi bi-funnel me-1"></i>
+              {statusFilter === 'all' ? '全部狀態' : 
+               statusFilter === 'Pending' ? '待處理' :
+               statusFilter === 'In Progress' ? '處理中' : '已完成'}
             </button>
             <ul className="dropdown-menu" aria-labelledby="dropdownMenuButton">
-              <li><a className="dropdown-item" href="#">僅顯示待處理</a></li>
-              <li><a className="dropdown-item" href="#">僅顯示進行中</a></li>
-              <li><a className="dropdown-item" href="#">僅顯示已完成</a></li>
-              <li><hr className="dropdown-divider" /></li>
-              <li><a className="dropdown-item" href="#">顯示全部</a></li>
+              <li>
+                <button 
+                  className={`dropdown-item ${statusFilter === 'all' ? 'active' : ''}`}
+                  onClick={() => setStatusFilter('all')}
+                >
+                  顯示全部
+                </button>
+              </li>
+              <li>
+                <button 
+                  className={`dropdown-item ${statusFilter === 'Pending' ? 'active' : ''}`}
+                  onClick={() => setStatusFilter('Pending')}
+                >
+                  僅顯示待處理
+                </button>
+              </li>
+              <li>
+                <button 
+                  className={`dropdown-item ${statusFilter === 'In Progress' ? 'active' : ''}`}
+                  onClick={() => setStatusFilter('In Progress')}
+                >
+                  僅顯示進行中
+                </button>
+              </li>
+              <li>
+                <button 
+                  className={`dropdown-item ${statusFilter === 'Closed' ? 'active' : ''}`}
+                  onClick={() => setStatusFilter('Closed')}
+                >
+                  僅顯示已完成
+                </button>
+              </li>
             </ul>
           </div>
+          
+          {/* 重置筛选按钮 */}
+          <button 
+            className="btn btn-outline-secondary me-2" 
+            onClick={resetFilters}
+          >
+            <i className="bi bi-x-circle me-1"></i>
+            重置筛选
+          </button>
+          
+          <button className="btn btn-outline-primary" onClick={fetchIssues}>
+            <i className="bi bi-arrow-clockwise me-1"></i> 刷新資料
+          </button>
         </div>
       </div>
 
@@ -178,30 +345,29 @@ export default function IssueBoard() {
               <table className="table table-hover table-striped">
                 <thead className="table-light">
                   <tr>
-                    <th style={{ width: "5%" }}>#</th>
-                    <th style={{ width: "15%" }}>客戶名稱</th>
+                    <th style={{ width: "20%" }}>客戶名稱</th>
                     <th style={{ width: "10%" }}>來源</th>
                     <th style={{ width: "10%" }}>問題類型</th>
                     <th style={{ width: "10%" }}>狀態</th>
                     <th style={{ width: "10%" }}>負責人</th>
-                    <th style={{ width: "10%" }}>建立日期</th>
-                    <th style={{ width: "10%" }}>保固到期日</th>
-                    <th style={{ width: "20%" }}>操作</th>
+                    <th style={{ width: "12%" }}>建立日期</th>
+                    <th style={{ width: "12%" }}>保固到期日</th>
+                    <th style={{ width: "16%" }}>操作</th>
                   </tr>
                 </thead>
                 <tbody>
                   {loading ? (
                     <tr>
-                      <td colSpan="9" className="text-center py-4">
+                      <td colSpan="8" className="text-center py-4">
                         <div className="spinner-border text-primary" role="status">
                           <span className="visually-hidden">Loading...</span>
                         </div>
                         <p className="mt-2 text-muted">載入中...</p>
                       </td>
                     </tr>
-                  ) : issues.length === 0 ? (
+                  ) : filteredIssues.length === 0 ? (
                     <tr>
-                      <td colSpan="9" className="text-center py-4">
+                      <td colSpan="8" className="text-center py-4">
                         <p className="text-muted mb-0">
                           <i className="bi bi-inbox me-2"></i>
                           目前沒有任何 Issue
@@ -209,14 +375,13 @@ export default function IssueBoard() {
                       </td>
                     </tr>
                   ) : (
-                    issues.map((issue) => (
+                    getCurrentPageData().map((issue) => (
                       <React.Fragment key={issue.id}>
                         <tr
                           className={expandedIssueId === issue.id ? "table-active" : ""}
                           onClick={() => handleExpand(issue.id)}
                           style={{ cursor: "pointer" }}
                         >
-                          <td>{issue.id}</td>
                           <td>{issue.title}</td>
                           <td>{issue.source || "-"}</td>
                           <td>{issue.issue_type || "-"}</td>
@@ -296,7 +461,7 @@ export default function IssueBoard() {
                         {/* 快速編輯表單 */}
                         {editingIssueId === issue.id && (
                           <tr>
-                            <td colSpan="9">
+                            <td colSpan="8">
                               <QuickEditForm 
                                 issue={issue} 
                                 onUpdate={handleQuickEditSave}
@@ -309,7 +474,7 @@ export default function IssueBoard() {
                         {/* 展開的詳情或評論 */}
                         {expandedIssueId === issue.id && (
                           <tr>
-                            <td colSpan="9">
+                            <td colSpan="8">
                               <div className="p-3 bg-light rounded">
                                 {/* 添加標籤頁切換 */}
                                 <ul className="nav nav-tabs mb-3">
@@ -358,6 +523,55 @@ export default function IssueBoard() {
                 </tbody>
               </table>
             </div>
+
+            {/* 分页导航 */}
+            {filteredIssues.length > 0 && (
+              <div className="d-flex justify-content-between align-items-center mt-3">
+                <div className="text-muted">
+                  共 {filteredIssues.length} 筆資料，第 {currentPage} 頁，共 {totalPages} 頁
+                </div>
+                <nav aria-label="Page navigation">
+                  <ul className="pagination mb-0">
+                    {/* 上一页按钮 */}
+                    <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
+                      <button
+                        className="page-link"
+                        onClick={() => handlePageChange(currentPage - 1)}
+                        disabled={currentPage === 1}
+                      >
+                        <i className="bi bi-chevron-left"></i>
+                      </button>
+                    </li>
+
+                    {/* 页码按钮 */}
+                    {getPageNumbers().map((pageNum, index) => (
+                      <li
+                        key={index}
+                        className={`page-item ${pageNum === currentPage ? 'active' : ''} ${pageNum === '...' ? 'disabled' : ''}`}
+                      >
+                        <button
+                          className="page-link"
+                          onClick={() => pageNum !== '...' && handlePageChange(pageNum)}
+                        >
+                          {pageNum}
+                        </button>
+                      </li>
+                    ))}
+
+                    {/* 下一页按钮 */}
+                    <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
+                      <button
+                        className="page-link"
+                        onClick={() => handlePageChange(currentPage + 1)}
+                        disabled={currentPage === totalPages}
+                      >
+                        <i className="bi bi-chevron-right"></i>
+                      </button>
+                    </li>
+                  </ul>
+                </nav>
+              </div>
+            )}
           </div>
         </div>
       )}
