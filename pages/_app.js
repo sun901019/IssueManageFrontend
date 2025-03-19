@@ -1,15 +1,27 @@
 import Head from "next/head";
 import "bootstrap/dist/css/bootstrap.min.css"; // 引入 Bootstrap 樣式
-import "../utils/chartjs-setup";               // 引入 Chart.js 全域設定
+import "bootstrap-icons/font/bootstrap-icons.css";
+import "../styles/globals.css";
+import { useEffect } from 'react';
 
 function MyApp({ Component, pageProps }) {
+  useEffect(() => {
+    // 確保Bootstrap的JavaScript在客戶端加載
+    if (typeof window !== 'undefined') {
+      require('bootstrap/dist/js/bootstrap.bundle.min.js');
+    }
+  }, []);
+
   return (
     <>
       <Head>
-        {/* 也可以在這裡引入其他 meta 或字體 */}
-        <title>Issue Management</title>
+        <title>問題管理系統</title>
       </Head>
-      <Component {...pageProps} />
+      <div className="app-container">
+        <main className="app-main">
+          <Component {...pageProps} />
+        </main>
+      </div>
     </>
   );
 }

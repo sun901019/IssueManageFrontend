@@ -26,7 +26,11 @@ const CommentSection = ({ issueId }) => {
     try {
       setLoading(true);
       setError('');
-      const res = await axios.get(`/comments/issue/${issueId}`);
+      console.log('正在獲取 issue ID 為', issueId, '的評論');
+      
+      // 使用完整 URL，而不是依賴 axios 配置
+      const res = await axios.get(`http://localhost:5000/api/comments/issue/${issueId}`);
+      console.log('獲取到評論:', res.data);
       setComments(res.data);
     } catch (error) {
       console.error('Failed to fetch comments:', error);
@@ -61,20 +65,23 @@ const CommentSection = ({ issueId }) => {
       
       // 建立 FormData 處理檔案
       const formData = new FormData();
-      formData.append('issueId', issueId);
+      formData.append('issue_id', issueId);
       formData.append('content', newComment);
-      formData.append('createdBy', 'User'); // 可改為實際用戶名稱
+      formData.append('created_by', 'User'); // 使用正確的欄位名稱
       
       // 添加檔案
       files.forEach(file => {
         formData.append('attachments', file);
       });
       
-      await axios.post('/comments', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
+      console.log('提交評論，參數：', {
+        issue_id: issueId,
+        content: newComment,
+        files: files.length
       });
+      
+      // 使用完整 URL，注意：使用 FormData 時，axios 會自動設置正確的 Content-Type
+      await axios.post('http://localhost:5000/api/comments', formData);
       
       // 重新獲取評論
       fetchComments();
@@ -90,6 +97,7 @@ const CommentSection = ({ issueId }) => {
 
   // 開始編輯評論
   const startEditingComment = (comment) => {
+    console.log('開始編輯評論:', comment);
     setEditingCommentId(comment.id);
     setEditText(comment.content);
     setEditFiles([]);
@@ -122,35 +130,28 @@ const CommentSection = ({ issueId }) => {
       setLoading(true);
       setError('');
       
-      const formData = new FormData();
-      formData.append('content', editText);
+      console.log('提交評論編輯:');
+      console.log('- 評論 ID:', commentId);
+      console.log('- 新內容:', editText);
       
-      // 添加要刪除的附件路徑
-      if (attachmentsToRemove.length > 0) {
-        formData.append('removeAttachments', JSON.stringify(attachmentsToRemove));
-      }
-      
-      // 添加新上傳的檔案
-      editFiles.forEach(file => {
-        formData.append('attachments', file);
-      });
-      
-      console.log(`更新評論 ${commentId}，內容長度: ${editText.length}`);
-      console.log(`要刪除的附件: ${JSON.stringify(attachmentsToRemove)}`);
-      console.log(`新增的附件數量: ${editFiles.length}`);
-      
-      const response = await axios.put(`/comments/${commentId}`, formData, {
+      // 直接使用 JSON 格式發送請求
+      const response = await axios({
+        method: 'PUT',
+        url: `http://localhost:5000/api/comments/${commentId}`,
+        data: {
+          content: editText
+        },
         headers: {
-          'Content-Type': 'multipart/form-data'
+          'Content-Type': 'application/json'
         }
       });
       
-      console.log('更新評論成功，響應:', response.data);
+      console.log('編輯成功，響應:', response.data);
       
       // 更新本地評論列表
       setComments(prev => 
         prev.map(comment => 
-          comment.id === commentId ? response.data : comment
+          comment.id === commentId ? { ...comment, ...response.data } : comment
         )
       );
       
@@ -160,8 +161,13 @@ const CommentSection = ({ issueId }) => {
       setEditFiles([]);
       setAttachmentsToRemove([]);
     } catch (error) {
-      console.error('Failed to update comment:', error);
-      setError('更新評論失敗，請重試');
+      console.error('更新評論失敗:', error);
+      if (error.response) {
+        console.error('錯誤響應:', error.response.data);
+        setError(`更新失敗: ${error.response.data.error || error.message}`);
+      } else {
+        setError(`更新失敗: ${error.message}`);
+      }
     } finally {
       setLoading(false);
     }
@@ -174,7 +180,8 @@ const CommentSection = ({ issueId }) => {
     try {
       setLoading(true);
       setError('');
-      await axios.delete(`/comments/${commentId}`);
+      // 使用完整 URL
+      await axios.delete(`http://localhost:5000/api/comments/${commentId}`);
       
       // 從本地狀態移除評論
       setComments(prev => prev.filter(comment => comment.id !== commentId));
@@ -257,58 +264,12 @@ const CommentSection = ({ issueId }) => {
                       rows={3}
                     />
                     
-                    {/* 現有附件 */}
-                    {comment.attachments && comment.attachments.length > 0 && (
-                      <div className="mb-3">
-                        <div className="small fw-bold mb-2">現有附件：</div>
-                        <div className="d-flex flex-wrap">
-                          {comment.attachments.map((attachment, index) => {
-                            const isMarkedForRemoval = attachmentsToRemove.includes(attachment.path);
-                            return (
-                              <div key={index} className="me-2 mb-2">
-                                <div className={`border rounded p-2 ${isMarkedForRemoval ? 'bg-light text-muted' : ''}`}>
-                                  <span className="me-2">📎 {attachment.filename}</span>
-                                  <button 
-                                    type="button"
-                                    className={`btn btn-sm ${isMarkedForRemoval ? 'btn-outline-success' : 'btn-outline-danger'}`}
-                                    onClick={() => isMarkedForRemoval 
-                                      ? unmarkAttachmentForRemoval(attachment.path)
-                                      : markAttachmentForRemoval(attachment.path)
-                                    }
-                                  >
-                                    {isMarkedForRemoval ? '恢復' : '刪除'}
-                                  </button>
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    )}
-                    
-                    {/* 上傳新附件 */}
-                    <div className="mb-3">
-                      <label htmlFor="editAttachments" className="form-label">
-                        新增附件
-                      </label>
-                      <input
-                        type="file"
-                        className="form-control"
-                        id="editAttachments"
-                        multiple
-                        onChange={handleEditFileChange}
-                        accept="image/*,.pdf,.doc,.docx,.xlsx,.pptx"
-                      />
-                      {editFiles.length > 0 && (
-                        <div className="mt-2 small text-muted">
-                          已選擇 {editFiles.length} 個文件
-                        </div>
-                      )}
-                    </div>
-                    
                     <button 
                       className="btn btn-sm btn-success me-1"
-                      onClick={() => updateComment(comment.id)}
+                      onClick={() => {
+                        console.log('點擊確認修改按鈕，ID:', comment.id);
+                        updateComment(comment.id);
+                      }}
                       disabled={loading || !editText.trim()}
                     >
                       {loading ? '處理中...' : '確認修改'}
