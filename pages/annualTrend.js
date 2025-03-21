@@ -1,13 +1,14 @@
 // frontend/pages/annualTrend.js
 import { useEffect, useState } from "react";
 import axios from "../utils/api";
-import { Line } from 'react-chartjs-2';
+import { Line, Bar } from 'react-chartjs-2';
 import { 
   Chart as ChartJS, 
   CategoryScale, 
   LinearScale, 
   PointElement, 
   LineElement, 
+  BarElement,
   Title, 
   Tooltip, 
   Legend, 
@@ -21,6 +22,7 @@ ChartJS.register(
   LinearScale,
   PointElement,
   LineElement,
+  BarElement,
   Title,
   Tooltip,
   Legend,
@@ -32,6 +34,9 @@ export default function AnnualTrendPage() {
   const [trendData, setTrendData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [selectedMonths, setSelectedMonths] = useState([]);
+  const [chartType, setChartType] = useState('line');
+  const months = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
 
   useEffect(() => {
     fetchTrendData(year);
@@ -95,7 +100,6 @@ export default function AnnualTrendPage() {
   const getMonthlyTrendChartData = () => {
     if (!trendData || !trendData.monthlyStats) return null;
     
-    const months = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
     const totalCounts = new Array(12).fill(0);
     
     trendData.monthlyStats.forEach(stat => {
@@ -105,28 +109,62 @@ export default function AnnualTrendPage() {
       }
     });
     
+    let filteredMonths = months;
+    let filteredCounts = totalCounts;
+    
+    if (selectedMonths.length > 0) {
+      filteredMonths = months.filter((_, index) => selectedMonths.includes(index + 1));
+      filteredCounts = totalCounts.filter((_, index) => selectedMonths.includes(index + 1));
+    }
+    
+    const backgroundColor = chartType === 'bar' 
+      ? filteredCounts.map(count => {
+          if (count > 20) return 'rgba(59, 130, 246, 0.8)';
+          if (count > 10) return 'rgba(59, 130, 246, 0.6)';
+          return 'rgba(59, 130, 246, 0.4)';
+        })
+      : 'rgba(59, 130, 246, 0.08)';
+    
     return {
-      labels: months,
+      labels: filteredMonths,
       datasets: [
         {
           label: 'Issue 數量',
-          data: totalCounts,
+          data: filteredCounts,
           borderColor: '#3B82F6',
-          backgroundColor: 'rgba(59, 130, 246, 0.08)',
-          fill: true,
-          tension: 0.4,
-          borderWidth: 2.5,
-          pointRadius: 4,
+          backgroundColor: backgroundColor,
+          fill: chartType === 'line',
+          tension: chartType === 'line' ? 0.4 : 0,
+          borderWidth: chartType === 'line' ? 2.5 : 0,
+          pointRadius: chartType === 'line' ? 4 : 0,
           pointBackgroundColor: '#FFFFFF',
           pointBorderColor: '#3B82F6',
           pointBorderWidth: 2,
           pointHoverRadius: 6,
           pointHoverBackgroundColor: '#3B82F6',
           pointHoverBorderColor: '#FFFFFF',
-          pointHoverBorderWidth: 2
+          pointHoverBorderWidth: 2,
+          borderRadius: chartType === 'bar' ? 4 : 0,
+          barPercentage: 0.6,
+          categoryPercentage: 0.8,
+          hoverBackgroundColor: chartType === 'bar' ? filteredCounts.map(() => 'rgba(59, 130, 246, 0.9)') : undefined,
         }
       ]
     };
+  };
+
+  const handleMonthChange = (monthNumber) => {
+    setSelectedMonths(prev => {
+      if (prev.includes(monthNumber)) {
+        return prev.filter(m => m !== monthNumber);
+      } else {
+        return [...prev, monthNumber].sort();
+      }
+    });
+  };
+
+  const clearMonthSelection = () => {
+    setSelectedMonths([]);
   };
 
   const chartOptions = {
@@ -294,7 +332,7 @@ export default function AnnualTrendPage() {
                   <div className="d-flex align-items-center mb-3">
                     <i className="bi bi-clipboard-data text-primary" style={{ fontSize: '1.25rem' }}></i>
                   </div>
-                  <div className="h2 text-primary mb-2" style={{ fontWeight: '600' }}>56</div>
+                  <div className="h2 text-primary mb-2" style={{ fontWeight: '600' }}>{trendData.totalCount}</div>
                   <div style={{ color: '#6B7280', fontSize: '0.875rem' }}>全年問題總數</div>
                 </div>
               </div>
@@ -310,7 +348,7 @@ export default function AnnualTrendPage() {
                   <div className="d-flex align-items-center mb-3">
                     <i className="bi bi-check-circle text-success" style={{ fontSize: '1.25rem' }}></i>
                   </div>
-                  <div className="h2 text-success mb-2" style={{ fontWeight: '600' }}>93%</div>
+                  <div className="h2 text-success mb-2" style={{ fontWeight: '600' }}>{trendData.resolutionRate || 0}%</div>
                   <div style={{ color: '#6B7280', fontSize: '0.875rem' }}>年度完成率</div>
                 </div>
               </div>
@@ -324,9 +362,9 @@ export default function AnnualTrendPage() {
                 }}>
                 <div className="card-body p-4">
                   <div className="d-flex align-items-center mb-3">
-                    <i className="bi bi-calendar-check text-info" style={{ fontSize: '1.25rem' }}></i>
+                    <i className="bi bi-check2-all text-info" style={{ fontSize: '1.25rem' }}></i>
                   </div>
-                  <div className="h2 text-info mb-2" style={{ fontWeight: '600' }}>9</div>
+                  <div className="h2 text-info mb-2" style={{ fontWeight: '600' }}>{trendData.currentMonthIssues || 0}</div>
                   <div style={{ color: '#6B7280', fontSize: '0.875rem' }}>本月已處理問題</div>
                 </div>
               </div>
@@ -342,7 +380,7 @@ export default function AnnualTrendPage() {
                   <div className="d-flex align-items-center mb-3">
                     <i className="bi bi-hourglass-split text-warning" style={{ fontSize: '1.25rem' }}></i>
                   </div>
-                  <div className="h2 text-warning mb-2" style={{ fontWeight: '600' }}>4</div>
+                  <div className="h2 text-warning mb-2" style={{ fontWeight: '600' }}>{trendData.pendingIssues || 0}</div>
                   <div style={{ color: '#6B7280', fontSize: '0.875rem' }}>月底未完成問題</div>
                 </div>
               </div>
@@ -358,13 +396,107 @@ export default function AnnualTrendPage() {
                 <div className="card-body p-4">
                   <div className="d-flex justify-content-between align-items-center mb-4">
                     <h6 className="mb-0" style={{ color: '#374151', fontWeight: '600' }}>年度問題趨勢</h6>
+                    <div className="d-flex align-items-center gap-2">
+                      <div className="btn-group" role="group" aria-label="圖表類型">
+                        <button 
+                          type="button" 
+                          className={`btn btn-sm ${chartType === 'line' ? 'btn-primary' : 'btn-light'}`}
+                          onClick={() => setChartType('line')}
+                          style={{
+                            padding: "0.5rem 0.875rem",
+                            fontSize: "0.875rem",
+                            borderRadius: "0.5rem 0 0 0.5rem",
+                            transition: "all 0.2s ease"
+                          }}
+                        >
+                          <i className="bi bi-graph-up me-1"></i>折線圖
+                        </button>
+                        <button 
+                          type="button" 
+                          className={`btn btn-sm ${chartType === 'bar' ? 'btn-primary' : 'btn-light'}`}
+                          onClick={() => setChartType('bar')}
+                          style={{
+                            padding: "0.5rem 0.875rem",
+                            fontSize: "0.875rem",
+                            borderRadius: "0 0.5rem 0.5rem 0",
+                            transition: "all 0.2s ease"
+                          }}
+                        >
+                          <i className="bi bi-bar-chart me-1"></i>長條圖
+                        </button>
+                      </div>
+                      
+                      <div className="dropdown">
+                        <button 
+                          className="btn btn-sm d-flex align-items-center gap-2 shadow-sm"
+                          style={{
+                            backgroundColor: "#FFFFFF",
+                            border: "1px solid #E5E7EB",
+                            color: "#374151",
+                            padding: "0.5rem 1rem",
+                            borderRadius: "0.5rem",
+                            fontSize: "0.875rem",
+                            transition: "all 0.2s ease"
+                          }}
+                          id="monthFilterDropdown"
+                          data-bs-toggle="dropdown"
+                          aria-expanded="false"
+                        >
+                          <i className="bi bi-funnel"></i>
+                          {selectedMonths.length > 0 ? `已選擇 ${selectedMonths.length} 個月份` : '篩選月份'}
+                        </button>
+                        <ul className="dropdown-menu shadow-sm" aria-labelledby="monthFilterDropdown" style={{ minWidth: '180px', padding: '0.5rem' }}>
+                          <li className="mb-2" style={{ fontSize: '0.875rem', fontWeight: '600', color: '#374151', padding: '0.25rem 0.75rem' }}>
+                            選擇月份
+                          </li>
+                          {months.map((month, index) => (
+                            <li key={index} className="form-check" style={{ padding: '0.25rem 0.75rem' }}>
+                              <input 
+                                type="checkbox" 
+                                className="form-check-input"
+                                id={`month-${index+1}`}
+                                checked={selectedMonths.includes(index+1)}
+                                onChange={() => handleMonthChange(index+1)}
+                                style={{ cursor: 'pointer' }}
+                              />
+                              <label 
+                                className="form-check-label" 
+                                htmlFor={`month-${index+1}`}
+                                style={{ cursor: 'pointer', fontSize: '0.875rem', color: '#4B5563' }}
+                              >
+                                {month}
+                              </label>
+                            </li>
+                          ))}
+                          <li><hr className="dropdown-divider" style={{ margin: '0.5rem 0' }} /></li>
+                          <li>
+                            <button 
+                              className="btn btn-sm btn-light w-100"
+                              onClick={clearMonthSelection}
+                              style={{ fontSize: '0.875rem', backgroundColor: '#F9FAFB' }}
+                            >
+                              顯示全部月份
+                            </button>
+                          </li>
+                        </ul>
+                      </div>
+                    </div>
                   </div>
                   <div style={{ height: '500px' }}>
                     {getMonthlyTrendChartData() && (
-                      <Line 
-                        data={getMonthlyTrendChartData()} 
-                        options={chartOptions} 
-                      />
+                      <>
+                        {chartType === 'line' ? (
+                          <Line 
+                            data={getMonthlyTrendChartData()} 
+                            options={chartOptions} 
+                          />
+                        ) : (
+                          <Bar
+                            data={getMonthlyTrendChartData()}
+                            options={chartOptions}
+                          />
+                        )}
+                      </>
                     )}
                   </div>
                 </div>
@@ -379,7 +511,14 @@ export default function AnnualTrendPage() {
                   borderRadius: '0.75rem'
                 }}>
                 <div className="card-body p-4">
-                  <h6 className="mb-4" style={{ color: '#374151', fontWeight: '600' }}>月度詳細數據</h6>
+                  <div className="d-flex justify-content-between align-items-center mb-4">
+                    <h6 className="mb-0" style={{ color: '#374151', fontWeight: '600' }}>月度詳細數據</h6>
+                    {selectedMonths.length > 0 && (
+                      <span className="badge bg-primary">
+                        已篩選 {selectedMonths.length} 個月份
+                      </span>
+                    )}
+                  </div>
                   <div className="table-responsive">
                     <table className="table table-hover">
                       <thead>
@@ -394,6 +533,11 @@ export default function AnnualTrendPage() {
                       <tbody>
                         {Array.from({ length: 12 }, (_, i) => {
                           const monthIndex = i + 1;
+                          
+                          if (selectedMonths.length > 0 && !selectedMonths.includes(monthIndex)) {
+                            return null;
+                          }
+                          
                           const monthData = trendData.monthlyStats.find(m => parseInt(m.month) === monthIndex);
                           const total = monthData ? (monthData.issueCount || monthData.total || 0) : 0;
                           const resolved = monthData ? (monthData.resolved || 0) : 0;

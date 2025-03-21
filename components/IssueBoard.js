@@ -6,8 +6,10 @@ import NewIssueForm from "./NewIssueForm"; // ✅ 確保 NewIssueForm 正確引�
 import CommentSection from "./CommentSection"; // 添加評論組件
 import QuickEditForm from "./QuickEditForm"; // 添加快速編輯組件
 import React from "react";
+import { useRouter } from "next/router";
 
 export default function IssueBoard() {
+  const router = useRouter();
   const [issues, setIssues] = useState([]);
   const [expandedIssueId, setExpandedIssueId] = useState(null);
   const [isAdding, setIsAdding] = useState(false); // 控制「新增 Issue」表單開關
@@ -24,19 +26,39 @@ export default function IssueBoard() {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [filteredIssues, setFilteredIssues] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     fetchIssues();
   }, []);
 
-  // 添加筛选逻辑
+  // 監聽 URL 查詢參數的變化
+  useEffect(() => {
+    if (router.query.search) {
+      setSearchTerm(router.query.search);
+      setCurrentPage(1); // 重置到第一頁顯示搜尋結果
+    }
+  }, [router.query.search]);
+
+  // 添加筛选逻辑，包含搜尋功能
   useEffect(() => {
     filterIssues();
-  }, [issues, statusFilter, startDate, endDate]);
+  }, [issues, statusFilter, startDate, endDate, searchTerm]);
 
   // 筛选功能
   const filterIssues = () => {
     let filtered = [...issues];
+
+    // 关键字搜索
+    if (searchTerm) {
+      const searchLower = searchTerm.toLowerCase();
+      filtered = filtered.filter(issue => 
+        (issue.title && issue.title.toLowerCase().includes(searchLower)) ||
+        (issue.description && issue.description.toLowerCase().includes(searchLower)) ||
+        (issue.assigned_to && issue.assigned_to.toLowerCase().includes(searchLower)) ||
+        (issue.customer_name && issue.customer_name.toLowerCase().includes(searchLower))
+      );
+    }
 
     // 状态筛选
     if (statusFilter !== 'all') {
@@ -63,7 +85,21 @@ export default function IssueBoard() {
     setStatusFilter('all');
     setStartDate('');
     setEndDate('');
+    setSearchTerm('');
     setCurrentPage(1); // 重置页码
+    
+    // 如果是從搜尋結果頁面重置，清除 URL 查詢參數
+    if (router.query.search) {
+      router.push('/issues', undefined, { shallow: true });
+    }
+  };
+
+  // 清除搜尋關鍵字
+  const clearSearch = () => {
+    setSearchTerm('');
+    if (router.query.search) {
+      router.push('/issues', undefined, { shallow: true });
+    }
   };
 
   // 计算当前页的数据
@@ -237,7 +273,36 @@ export default function IssueBoard() {
         <button className="btn btn-success shadow-sm" onClick={() => setIsAdding(true)}>
           <i className="bi bi-plus-circle me-1"></i> 新增 Issue
         </button>
+
         <div className="d-flex align-items-center gap-2 bg-light p-2 rounded shadow-sm">
+          {/* 搜尋框 */}
+          <div className="input-group me-2" style={{ width: "280px" }}>
+            <input
+              type="text"
+              className="form-control form-control-sm shadow-sm"
+              placeholder="搜尋問題..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            {searchTerm && (
+              <button
+                className="btn btn-sm btn-outline-secondary"
+                onClick={clearSearch}
+                title="清除搜尋"
+              >
+                <i className="bi bi-x"></i>
+              </button>
+            )}
+            <button
+              className="btn btn-sm btn-outline-primary"
+              onClick={() => router.push({ pathname: '/issues', query: { search: searchTerm } }, undefined, { shallow: true })}
+              disabled={!searchTerm}
+              title="搜尋"
+            >
+              <i className="bi bi-search"></i>
+            </button>
+          </div>
+
           {/* 日期筛选 */}
           <div className="d-flex align-items-center">
             <span className="text-secondary me-2">
@@ -319,6 +384,23 @@ export default function IssueBoard() {
           </button>
         </div>
       </div>
+
+      {/* 顯示搜尋結果提示 */}
+      {searchTerm && (
+        <div className="alert alert-info d-flex align-items-center mb-3">
+          <i className="bi bi-info-circle me-2"></i>
+          <span>
+            搜尋 "{searchTerm}" 的結果: <strong>{filteredIssues.length}</strong> 筆問題
+          </span>
+          <button 
+            className="btn btn-sm btn-outline-secondary ms-auto"
+            onClick={clearSearch}
+          >
+            <i className="bi bi-x me-1"></i>
+            清除搜尋
+          </button>
+        </div>
+      )}
 
       {/* 新增 Issue 表單 */}
       {isAdding && (

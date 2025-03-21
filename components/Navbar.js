@@ -1,12 +1,25 @@
 import { useRouter } from 'next/router';
 import Link from 'next/link';
+import { useState } from 'react';
 
 export default function Navbar() {
   const router = useRouter();
+  const [searchQuery, setSearchQuery] = useState('');
   
   // 檢查當前路徑是否為活動項目
   const isActive = (path) => {
     return router.pathname === path ? 'active' : '';
+  };
+
+  // 處理搜尋功能
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      router.push({
+        pathname: '/issues',
+        query: { search: searchQuery }
+      });
+    }
   };
 
   return (
@@ -96,17 +109,21 @@ export default function Navbar() {
           </ul>
           
           <div className="d-flex">
-            <div className="input-group">
-              <input 
-                type="text" 
-                className="form-control" 
-                placeholder="搜尋問題..." 
-                aria-label="搜尋問題"
-              />
-              <button className="btn btn-light" type="button">
-                <i className="bi bi-search"></i>
-              </button>
-            </div>
+            <form onSubmit={handleSearch} className="d-flex">
+              <div className="input-group">
+                <input 
+                  type="text" 
+                  className="form-control" 
+                  placeholder="搜尋問題..." 
+                  aria-label="搜尋問題"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+                <button className="btn btn-light" type="submit">
+                  <i className="bi bi-search"></i>
+                </button>
+              </div>
+            </form>
             
             <div className="dropdown ms-2">
               <button 

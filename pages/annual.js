@@ -199,18 +199,22 @@ export default function AnnualPage() {
               <div className="chart-wrapper">
                 <Pie
                   data={{
-                    labels: ['Line chat', '業務', '現場'],
+                    labels: Object.keys(annualData.sourceStats || {}),
                     datasets: [{
-                      data: [45, 3, 8],
+                      data: Object.values(annualData.sourceStats || {}),
                       backgroundColor: [
                         'rgba(74, 144, 226, 0.85)',
                         'rgba(255, 149, 149, 0.85)',
-                        'rgba(255, 205, 86, 0.85)'
+                        'rgba(255, 205, 86, 0.85)',
+                        'rgba(126, 211, 33, 0.85)',
+                        'rgba(208, 132, 212, 0.85)'
                       ],
                       borderColor: [
                         'rgb(74, 144, 226)',
                         'rgb(255, 149, 149)',
-                        'rgb(255, 205, 86)'
+                        'rgb(255, 205, 86)',
+                        'rgb(126, 211, 33)',
+                        'rgb(208, 132, 212)'
                       ],
                       borderWidth: 2
                     }]
@@ -236,18 +240,22 @@ export default function AnnualPage() {
               <div className="chart-wrapper">
                 <Pie
                   data={{
-                    labels: ['系統', '設備', '系統功能'],
+                    labels: Object.keys(annualData.typeStats || {}),
                     datasets: [{
-                      data: [19, 25, 12],
+                      data: Object.values(annualData.typeStats || {}),
                       backgroundColor: [
                         'rgba(80, 227, 194, 0.85)',
                         'rgba(156, 123, 220, 0.85)',
-                        'rgba(255, 205, 86, 0.85)'
+                        'rgba(255, 205, 86, 0.85)',
+                        'rgba(255, 149, 149, 0.85)',
+                        'rgba(74, 144, 226, 0.85)'
                       ],
                       borderColor: [
                         'rgb(80, 227, 194)',
                         'rgb(156, 123, 220)',
-                        'rgb(255, 205, 86)'
+                        'rgb(255, 205, 86)',
+                        'rgb(255, 149, 149)',
+                        'rgb(74, 144, 226)'
                       ],
                       borderWidth: 2
                     }]
@@ -281,21 +289,17 @@ export default function AnnualPage() {
                             </tr>
                           </thead>
                           <tbody>
-                  <tr>
-                    <td>Line chat</td>
-                    <td>45</td>
-                    <td>80%</td>
-                  </tr>
-                  <tr>
-                    <td>業務</td>
-                    <td>3</td>
-                    <td>5%</td>
-                              </tr>
-                              <tr>
-                    <td>現場</td>
-                    <td>8</td>
-                    <td>14%</td>
-                              </tr>
+                            {Object.entries(annualData.sourceStats || {}).map(([source, count]) => {
+                              const total = Object.values(annualData.sourceStats || {}).reduce((sum, val) => sum + val, 0);
+                              const percentage = total > 0 ? Math.round((count / total) * 100) : 0;
+                              return (
+                                <tr key={source}>
+                                  <td>{source}</td>
+                                  <td>{count}</td>
+                                  <td>{percentage}%</td>
+                                </tr>
+                              );
+                            })}
                           </tbody>
                         </table>
                       </div>
@@ -322,21 +326,17 @@ export default function AnnualPage() {
                             </tr>
                           </thead>
                           <tbody>
-                  <tr>
-                    <td>系統</td>
-                    <td>19</td>
-                    <td>34%</td>
-                  </tr>
-                  <tr>
-                    <td>設備</td>
-                    <td>25</td>
-                    <td>45%</td>
-                              </tr>
-                              <tr>
-                    <td>系統功能</td>
-                    <td>12</td>
-                    <td>21%</td>
-                              </tr>
+                            {Object.entries(annualData.typeStats || {}).map(([type, count]) => {
+                              const total = Object.values(annualData.typeStats || {}).reduce((sum, val) => sum + val, 0);
+                              const percentage = total > 0 ? Math.round((count / total) * 100) : 0;
+                              return (
+                                <tr key={type}>
+                                  <td>{type}</td>
+                                  <td>{count}</td>
+                                  <td>{percentage}%</td>
+                                </tr>
+                              );
+                            })}
                           </tbody>
                         </table>
                       </div>

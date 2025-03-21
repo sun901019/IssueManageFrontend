@@ -1,13 +1,25 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 
 export default function DashboardLayout({ children, title }) {
   const router = useRouter();
+  const [searchQuery, setSearchQuery] = useState('');
   
   // 檢查當前路徑是否為指定頁面
   const isActive = (path) => {
     return router.pathname === path;
+  };
+
+  // 處理搜尋功能
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      router.push({
+        pathname: '/issues',
+        query: { search: searchQuery }
+      });
+    }
   };
 
   return (
@@ -65,9 +77,16 @@ export default function DashboardLayout({ children, title }) {
               </li>
             </ul>
             
-            <form className="d-flex me-2">
+            <form className="d-flex me-2" onSubmit={handleSearch}>
               <div className="input-group">
-                <input className="form-control" type="search" placeholder="搜尋問題..." aria-label="Search" />
+                <input 
+                  className="form-control" 
+                  type="search" 
+                  placeholder="搜尋問題..." 
+                  aria-label="Search" 
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
                 <button className="btn btn-outline-light" type="submit">
                   <i className="bi bi-search"></i>
                 </button>
@@ -126,5 +145,5 @@ export default function DashboardLayout({ children, title }) {
         </div>
       </footer>
     </div>
-  );
+  );    
 } 
